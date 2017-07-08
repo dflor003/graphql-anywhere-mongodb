@@ -8,6 +8,13 @@ node_modules
 npm-debug.log
 yarn-error.log
 
+# Build artifacts
+/dist
+/src/**/*.js
+/src/**/*.js.map
+/test/**/*.js
+/test/**/*.js.map
+
 # OS-Specific
 Thumbs.db
 .DS_Store

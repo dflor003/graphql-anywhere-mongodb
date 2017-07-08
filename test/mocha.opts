@@ -1,0 +1,5 @@
+--compilers ts:ts-node/register
+--recursive
+--growl
+--inline-diffs
+--full-trace
