@@ -18,7 +18,7 @@ Or using yarn:
 yarn add graphql-tag graphql-anywhere-mongodb
 ```
 
-# Usage
+## Usage
 
 Use one of the factory functions to create a query executor and then call `find` or `findOne` with a GraphQL query that contains one or more queries around your mongo collections:
 
@@ -28,7 +28,7 @@ import gql from 'graphql-tag';
 
 async function doStuff() {
   // Can acquire a GraphQLMongoQueryExecutor by passing in a MongoDB URI
-  // this will use the mongo driver to create its own connection 
+  // this will use the mongo driver to create its own connection
   const mongo = await graphql.forUri('mongodb://myhost:27017/myDatabase');
 
   // Alternatively you can use an existing mongo driver connection
@@ -52,7 +52,7 @@ async function doStuff() {
       }
     }
   `;
-  const variables = { 
+  const variables = {
     age: 21,
     limit: 100,
     offset: 0,
@@ -61,3 +61,10 @@ async function doStuff() {
   const results = await mongo.find(query, variables);
 }
 ```
+
+## TODO List
+
+- [X] Support basic querying capabilities against MongoDB Collections.
+- [ ] Support collection-level things like `limit` and `skip`.
+- [ ] Support projection/filtering of arrays inside documents.
+- [ ] GraphiQL-like example to test this against arbitrary MongoDB instances.
