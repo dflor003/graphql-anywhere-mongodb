@@ -65,6 +65,8 @@ async function doStuff() {
 ## TODO List
 
 - [X] Support basic querying capabilities against MongoDB Collections.
-- [ ] Support collection-level things like `limit` and `skip`.
+- [X] Support collection-level things like `limit` and `skip`.
+- [ ] Support other collection-level things like sorting.
+- [ ] Support more complex data types
 - [ ] Support projection/filtering of arrays inside documents.
 - [ ] GraphiQL-like example to test this against arbitrary MongoDB instances.

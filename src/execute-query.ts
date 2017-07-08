@@ -40,7 +40,7 @@ export async function findAll(connection: Db, queryInfo: MongoQueryInfo): Promis
   const collectionName = collection.collectionName;
 
   try {
-    const cursor = collection.find<object>(queryInfo.query, queryInfo.fields);
+    const cursor = collection.find<object>(queryInfo.query, queryInfo.fields, queryInfo.skip, queryInfo.limit);
     return {
       collection: collectionName,
       results: await cursor.toArray(),
