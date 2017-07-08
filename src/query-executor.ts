@@ -2,7 +2,6 @@ import { Db } from 'mongodb';
 import { DocumentNode } from 'graphql';
 import { executeQueries, findOne } from './execute-query';
 import { graphqlToMongo } from './graphql-to-mongo';
-import { log } from '../test/log';
 
 export interface MongoGraphQLQueryResult {
   data: { [collection: string]: any; };
@@ -20,7 +19,7 @@ export class GraphQLMongoQueryExecutor {
     this.connection = connection;
   }
 
-  async findAll(query: DocumentNode, variables?: object): Promise<MongoGraphQLQueryResult> {
+  async find(query: DocumentNode, variables?: object): Promise<MongoGraphQLQueryResult> {
     // Convert graphql to info about how to execute query
     const queryInfos = graphqlToMongo(query, variables);
 
