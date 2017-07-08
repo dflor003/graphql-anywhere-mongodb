@@ -1,0 +1,13 @@
+# IDE-specific
+.idea
+*.iml
+.vscode
+
+# Node Stuff
+node_modules
+npm-debug.log
+yarn-error.log
+
+# OS-Specific
+Thumbs.db
+.DS_Store
