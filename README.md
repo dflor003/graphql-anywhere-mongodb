@@ -22,7 +22,7 @@ yarn add graphql-tag graphql-anywhere-mongodb
 
 Use one of the factory functions to create a query executor and then call `find` or `findOne` with a GraphQL query that contains one or more queries around your mongo collections:
 
-```
+```js
 import graphql from 'graphql-anywhere-mongodb';
 import gql from 'graphql-tag';
 
