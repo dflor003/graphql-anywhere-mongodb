@@ -8,21 +8,50 @@ export type QueryMap = { [key: string]: any; };
 
 export interface MongoQueryInfo {
   collection: string;
+  limit?: number;
+  skip?: number;
   query: QueryMap;
   fields: QueryMap;
 }
 
+// Arguments that are only valid for the entire collection
+export const ValidCollectionArgs = ['limit', 'skip'];
+const validateCollectionArgs = (args: any) => keys(args)
+  .filter(arg => !ValidCollectionArgs.includes(arg))
+  .forEach(arg => {
+    throw new Error(`Argument '${arg}' is not a valid collection-level argument.`);
+  });
+
+// Arguments that are valid for any leaf
+export const ValidLeafArguments = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'exists', 'regex'];
+const validateLeafArguments = (args: any) => keys(args)
+  .filter(arg => !ValidLeafArguments.includes(arg))
+  .forEach(arg => {
+    throw new Error(`Argument '${arg}' is not a valid field-level argument.`);
+  });
+
+
+
 export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQueryInfo[] {
   // Use resolver to build an intermediate model of how the mongo query will look
-  const result = graphql(resolve, query, null, null, variables);
+  const context: any = {};
+  const result = graphql(resolve, query, null, context, variables);
 
   // Build data structure to hold query info
   const queries = keys(result)
-    .map(collection => <MongoQueryInfo>({
-      collection,
-      query: {},
-      fields: {}
-    }));
+    .map(collection => {
+      const baseQuery: any = {
+        collection,
+        query: {},
+        fields: {}
+      };
+
+      // Add on any extra parameters like limit, skip, sort, etc.
+      const extraParams = context[collection] || {};
+      keys(extraParams).forEach(key => baseQuery[key] = extraParams[key]);
+
+      return <MongoQueryInfo>baseQuery;
+    });
 
   // Process each collection subtree to discover how the mongo query should look
   queries
@@ -32,6 +61,23 @@ export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQu
 }
 
 function resolve(fieldName: string, rootValue: any, args: any, context: any, info: ExecInfo): QueryMap {
+  // Check for args at the collection level like limit & skip
+  if (!rootValue && args) {
+    validateCollectionArgs(args);
+    context[fieldName] = args;
+  }
+
+  // Error if applying args to anything other than the collection
+  // TODO: Support array field types
+  if (rootValue && !info.isLeaf && args) {
+    throw new Error(`Arguments are not supported at sub-document level`);
+  }
+
+  // Validate leaf args if present
+  if (info.isLeaf && args) {
+    validateLeafArguments(args);
+  }
+
   return <QueryMap>keys(args || {})
     .reduce((obj: QueryMap, arg: any) => ({
       ...obj,

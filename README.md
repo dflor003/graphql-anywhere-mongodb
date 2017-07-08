@@ -8,13 +8,13 @@ A library based off [graphql-anywhere](https://github.com/apollographql/graphql-
 
 Install using npm:
 
-```
+```sh
 npm install --save graphql-tag graphql-anhywhere-mongodb
 ```
 
 Or using yarn:
 
-```
+```sh
 yarn add graphql-tag graphql-anywhere-mongodb
 ```
 
@@ -27,37 +27,37 @@ import graphql from 'graphql-anywhere-mongodb';
 import gql from 'graphql-tag';
 
 async function doStuff() {
-	// Can acquire a GraphQLMongoQueryExecutor by passing in a MongoDB URI
-	// this will use the mongo driver to create its own connection 
-	const mongo = await graphql.forUri('mongodb://myhost:27017/myDatabase');
+  // Can acquire a GraphQLMongoQueryExecutor by passing in a MongoDB URI
+  // this will use the mongo driver to create its own connection 
+  const mongo = await graphql.forUri('mongodb://myhost:27017/myDatabase');
 
-	// Alternatively you can use an existing mongo driver connection
-	const myConnection = await fetchConnection();
-	const mongo = graphql.forConnection(myConnection);
+  // Alternatively you can use an existing mongo driver connection
+  const myConnection = await fetchConnection();
+  const mongo = graphql.forConnection(myConnection);
 
-	// Then you can start querying mongodb using graphql queries and the
-	// gql string template from the graphql-tag library
-	const query = gql`
-      {
-        users (limit: $limit, skip: $offset) {
-          firstName
-          lastName
-          age (gte: $age)
-          lastLoggedIn (gt: $date)
-          address {
-            city
-            state
-            zip
-          }
+  // Then you can start querying mongodb using graphql queries and the
+  // gql string template from the graphql-tag library
+  const query = gql`
+    {
+      users (limit: $limit, skip: $offset) {
+        firstName
+        lastName
+        age (gte: $age)
+        lastLoggedIn (gt: $date)
+        address {
+          city
+          state
+          zip
         }
       }
-    `;
-    const variables = { 
-      age: 21,
-      limit: 100,
-      offset: 0,
-      date: new Date('2017-01-17T05:00:00.000Z')
-    };
-    const results = await mongo.find(query, variables);
+    }
+  `;
+  const variables = { 
+    age: 21,
+    limit: 100,
+    offset: 0,
+    date: new Date('2017-01-17T05:00:00.000Z')
+  };
+  const results = await mongo.find(query, variables);
 }
 ```

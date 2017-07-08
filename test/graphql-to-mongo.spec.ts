@@ -67,4 +67,82 @@ describe('GraphQL to Mongo', () => {
       }
     ])
   });
+
+  it('should support limit and skip at the root', () => {
+    // Arrange
+    const query = gql`
+      {
+        users (limit: $limit, skip: $offset) {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    // Act
+    const result = graphqlToMongo(query, { limit: 100, offset: 10 });
+
+    // Assert
+    expect(result).to.deep.equal([
+      {
+        collection: 'users',
+        limit: 100,
+        skip: 10,
+        query: {},
+        fields: {
+          'firstName': 1,
+          'lastName': 1,
+        }
+      }
+    ]);
+  });
+
+  it('should not support arguments inside a document', () => {
+    // Arrange
+    const query = gql`
+      {
+        users {
+          firstName
+          lastName
+          addresses (limit: 20) {
+            city
+            state
+          }
+        }
+      }
+    `;
+
+    // Act / Assert
+    expect(() => graphqlToMongo(query)).to.throw(`Arguments are not supported at sub-document level`);
+  });
+
+  it(`should not support collection level arguments that don't make sense`, () => {
+    // Arrange
+    const query = gql`
+      {
+        users (foo: "Bar") {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    // Act / Assert
+    expect(() => graphqlToMongo(query)).to.throw(`Argument 'foo' is not a valid collection-level argument.`);
+  });
+
+  it(`should not support field level arguments that don't make sense`, () => {
+    // Arrange
+    const query = gql`
+      {
+        users  {
+          firstName (derp: "Bar")
+          lastName
+        }
+      }
+    `;
+
+    // Act / Assert
+    expect(() => graphqlToMongo(query)).to.throw(`Argument 'derp' is not a valid field-level argument.`);
+  });
 });
