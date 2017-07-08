@@ -2,13 +2,16 @@
   "name": "graphql-anywhere-mongodb",
   "version": "1.0.0",
   "description": "Use graphql to query mongodb",
-  "main": "index.js",
+  "main": "./dist/src/index.js",
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsc -p .",
     "test": "mocha",
     "test:watch": "npm run test -- -w"
   },
+  "files": [
+    "./dist/src"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dflor003/graphql-anywhere-mongodb.git"
@@ -29,16 +32,19 @@
   "dependencies": {
     "graphql-anywhere": "^3.1.0",
     "graphql-tag": "^2.4.2",
+    "mongodb": "^2.2.x",
     "tslib": "~1.7.x"
   },
   "devDependencies": {
     "@types/chai": "^4.0.1",
     "@types/graphql": "^0.9.3",
     "@types/mocha": "^2.2.41",
+    "@types/mongodb": "^2.2.7",
     "@types/node": "^8.0.9",
     "chai": "^4.0.2",
     "graphql": "^0.10.3",
     "mocha": "^3.4.2",
+    "mongo-in-memory": "^0.0.5",
     "rimraf": "^2.6.1",
     "sinon": "^2.3.6",
     "ts-node": "^3.2.0",

@@ -9,7 +9,7 @@ export type QueryMap = { [key: string]: any; };
 export interface MongoQueryInfo {
   collection: string;
   query: QueryMap;
-  projection: string[];
+  fields: QueryMap;
 }
 
 export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQueryInfo[] {
@@ -17,12 +17,11 @@ export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQu
   const result = graphql(resolve, query, null, null, variables);
 
   // Build data structure to hold query info
-  const collectionNames = keys(result);
-  const queries = collectionNames
+  const queries = keys(result)
     .map(collection => <MongoQueryInfo>({
       collection,
       query: {},
-      projection: []
+      fields: {}
     }));
 
   // Process each collection subtree to discover how the mongo query should look
@@ -64,7 +63,7 @@ function buildQuery(node: any, parents: string[], queryInfo: MongoQueryInfo): vo
       });
 
       // Add leaf fields to projection
-      queryInfo.projection.push(fieldPath);
+      queryInfo.fields[fieldPath] = 1;
     } else if (keys(value).length > 0) {
       // Recursively process children for nested objects
       buildQuery(value, path, queryInfo);

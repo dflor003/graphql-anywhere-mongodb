@@ -1,7 +1,6 @@
 import gql from 'graphql-tag';
 import { expect } from 'chai';
 import { graphqlToMongo } from '../src/graphql-to-mongo';
-import { log } from './log';
 
 describe('GraphQL to Mongo', () => {
   it('should support simple queries', () => {
@@ -30,7 +29,12 @@ describe('GraphQL to Mongo', () => {
           'type': { '$eq': 'foo.bar.Baz' },
           'body.tenantId': { $eq: 'something' }
         },
-        projection: ['type', 'body.id', 'body.tenantId', 'body.name']
+        fields: {
+          'type': 1,
+          'body.id': 1,
+          'body.tenantId': 1,
+          'body.name': 1,
+        }
       }
     ]);
   });
@@ -57,7 +61,9 @@ describe('GraphQL to Mongo', () => {
         query: {
           'outerField.nestedField': { $eq: 42 }
         },
-        projection: ['outerField.nestedField']
+        fields: {
+          'outerField.nestedField': 1
+        }
       }
     ])
   });
