@@ -31,7 +31,6 @@ const validateLeafArguments = (args: any) => keys(args)
   });
 
 
-
 export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQueryInfo[] {
   // Use resolver to build an intermediate model of how the mongo query will look
   const context: any = {};

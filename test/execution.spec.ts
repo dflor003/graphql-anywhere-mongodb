@@ -2,15 +2,15 @@ import gql from 'graphql-tag';
 import { expect } from 'chai';
 import { mongoTestServer } from './util/mongo-test-server';
 import { Collection, Db } from 'mongodb';
-import { GraphQLMongoQueryExecutor } from '../src';
-import { graphql } from '../src/query-executor-factory';
+import { GraphQLMongoClient } from '../src';
+import { graphqlClient } from '../src/graphql-mongo-client-factory';
 
 describe('Execution of mongo graphql queries', () => {
   const server = mongoTestServer();
   let connection: Db;
   let users: Collection<any>;
   let collection2: Collection<any>;
-  let executor: GraphQLMongoQueryExecutor;
+  let client: GraphQLMongoClient;
 
   before(async () => {
     await server.start();
@@ -22,7 +22,7 @@ describe('Execution of mongo graphql queries', () => {
 
   beforeEach(async () => {
     connection = await server.getConnection('test-db');
-    executor = graphql.forConnection(connection);
+    client = graphqlClient.forConnection(connection);
     users = await connection.collection('users');
     collection2 = await connection.collection('collection2');
   });
@@ -51,7 +51,7 @@ describe('Execution of mongo graphql queries', () => {
       `;
 
       // Act
-      const results = await executor.findOne(query, { id: 3 });
+      const results = await client.findOne(query, { id: 3 });
 
       // Assert
       expect(results).to.deep.equal({
@@ -87,7 +87,7 @@ describe('Execution of mongo graphql queries', () => {
       `;
 
       // Act
-      const results = await executor.find(query, { age: 21 });
+      const results = await client.find(query, { age: 21 });
 
       // Assert
       expect(results.data.users.length).to.equal(3);
@@ -126,7 +126,7 @@ describe('Execution of mongo graphql queries', () => {
         `;
 
         // Act
-        const results = await executor.find(query);
+        const results = await client.find(query);
 
         // Assert
         expect(results.data.users.length).to.equal(3);

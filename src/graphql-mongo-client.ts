@@ -1,14 +1,14 @@
 import { Db } from 'mongodb';
 import { DocumentNode } from 'graphql';
-import { executeQueries, findOne } from './execute-query';
+import { findMultiple, findOne } from './mongo-queries';
 import { graphqlToMongo } from './graphql-to-mongo';
 
-export interface MongoGraphQLQueryResult {
+export interface QueryResult {
   data: { [collection: string]: any; };
   errors: any[];
 }
 
-export class GraphQLMongoQueryExecutor {
+export class GraphQLMongoClient {
   private readonly connection: Db;
 
   constructor(connection: Db) {
@@ -19,12 +19,12 @@ export class GraphQLMongoQueryExecutor {
     this.connection = connection;
   }
 
-  async find(query: DocumentNode, variables?: object): Promise<MongoGraphQLQueryResult> {
+  async find(query: DocumentNode, variables?: object): Promise<QueryResult> {
     // Convert graphql to info about how to execute query
     const queryInfos = graphqlToMongo(query, variables);
 
     // Execute the query and get back the results
-    const results = await executeQueries(this.connection, queryInfos);
+    const results = await findMultiple(this.connection, queryInfos);
 
     // Check for errors
     const errors = results
@@ -44,7 +44,7 @@ export class GraphQLMongoQueryExecutor {
     }
   }
 
-  async findOne(query: DocumentNode, variables?: object): Promise<MongoGraphQLQueryResult> {
+  async findOne(query: DocumentNode, variables?: object): Promise<QueryResult> {
     // Convert graphql to info about how to execute query
     const queryInfos = graphqlToMongo(query, variables);
 

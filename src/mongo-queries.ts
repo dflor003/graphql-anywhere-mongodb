@@ -1,5 +1,6 @@
 import { MongoQueryInfo } from './graphql-to-mongo';
 import { Db } from 'mongodb';
+import { log } from './log';
 
 export interface GraphQLExecutionResult {
   collection: string;
@@ -7,7 +8,7 @@ export interface GraphQLExecutionResult {
   error: Error;
 }
 
-export async function executeQueries(connection: Db, queryInfos: MongoQueryInfo[]): Promise<GraphQLExecutionResult[]> {
+export async function findMultiple(connection: Db, queryInfos: MongoQueryInfo[]): Promise<GraphQLExecutionResult[]> {
   return await Promise.all(
     queryInfos.map(query => findAll(connection, query))
   );
@@ -18,6 +19,7 @@ export async function findOne(connection: Db, queryInfo: MongoQueryInfo): Promis
   const collectionName = collection.collectionName;
 
   try {
+    log(`Executing ${collectionName}.findOne(${JSON.stringify(queryInfo.query)}, ${JSON.stringify(queryInfo.fields)})`);
     const document = await collection.findOne<object>(queryInfo.query, {
       fields: queryInfo.fields,
     });
@@ -40,6 +42,7 @@ export async function findAll(connection: Db, queryInfo: MongoQueryInfo): Promis
   const collectionName = collection.collectionName;
 
   try {
+    log(`Executing ${collectionName}.find(${JSON.stringify(queryInfo.query)}, ${JSON.stringify(queryInfo.fields)})`);
     const cursor = collection.find<object>(queryInfo.query, queryInfo.fields, queryInfo.skip, queryInfo.limit);
     return {
       collection: collectionName,
