@@ -8,7 +8,7 @@ export interface QueryResult {
   errors: any[];
 }
 
-export class GraphQLMongoClient {
+export class MongoGraphQLClient {
   private readonly connection: Db;
 
   constructor(connection: Db) {

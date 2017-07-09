@@ -1,7 +1,7 @@
-import { graphqlClient, GraphQLMongoClientFactory } from './graphql-mongo-client-factory';
+import { graphqlClient, GraphQLMongoClientFactory } from './mongo-grqphql-client-factory';
 
-export { GraphQLMongoClient } from './graphql-mongo-client';
-export { GraphQLMongoClientFactory } from './graphql-mongo-client-factory';
+export { MongoGraphQLClient } from './mongo-graphql-client';
+export { GraphQLMongoClientFactory } from './mongo-grqphql-client-factory';
 export { graphqlToMongo } from './graphql-to-mongo';
 export { findOne, findAll, findMultiple } from './mongo-queries';
 

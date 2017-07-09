@@ -2,15 +2,15 @@ import gql from 'graphql-tag';
 import { expect } from 'chai';
 import { mongoTestServer } from './util/mongo-test-server';
 import { Collection, Db } from 'mongodb';
-import { GraphQLMongoClient } from '../src';
-import { graphqlClient } from '../src/graphql-mongo-client-factory';
+import { MongoGraphQLClient } from '../src';
+import { graphqlClient } from '../src/mongo-grqphql-client-factory';
 
-describe('Execution of mongo graphql queries', () => {
+describe('MongoGraphQLClient', () => {
   const server = mongoTestServer();
   let connection: Db;
   let users: Collection<any>;
   let collection2: Collection<any>;
-  let client: GraphQLMongoClient;
+  let client: MongoGraphQLClient;
 
   before(async () => {
     await server.start();

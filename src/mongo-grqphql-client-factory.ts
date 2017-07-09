@@ -1,11 +1,11 @@
 import { Db, MongoClient, MongoClientOptions } from 'mongodb';
-import { GraphQLMongoClient } from './graphql-mongo-client';
+import { MongoGraphQLClient } from './mongo-graphql-client';
 
-function forConnection(connection: Db): GraphQLMongoClient {
-  return new GraphQLMongoClient(connection);
+function forConnection(connection: Db): MongoGraphQLClient {
+  return new MongoGraphQLClient(connection);
 }
 
-async function forUri(mongoUri: string, options?: MongoClientOptions): Promise<GraphQLMongoClient> {
+async function forUri(mongoUri: string, options?: MongoClientOptions): Promise<MongoGraphQLClient> {
   if (typeof mongoUri !== 'string') {
     throw new Error(`Must pass a valid MongoDB connection string`);
   }
@@ -15,8 +15,8 @@ async function forUri(mongoUri: string, options?: MongoClientOptions): Promise<G
 }
 
 export interface GraphQLMongoClientFactory {
-  forConnection(connection: Db): GraphQLMongoClient;
-  forUri(mongoUri: string, options?: MongoClientOptions): Promise<GraphQLMongoClient>;
+  forConnection(connection: Db): MongoGraphQLClient;
+  forUri(mongoUri: string, options?: MongoClientOptions): Promise<MongoGraphQLClient>;
 }
 
 export const graphqlClient: GraphQLMongoClientFactory = {
