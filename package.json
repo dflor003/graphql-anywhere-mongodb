@@ -11,7 +11,7 @@
     "test:watch": "npm run test -- -w"
   },
   "files": [
-    "./dist/src"
+    "dist/src"
   ],
   "repository": {
     "type": "git",
