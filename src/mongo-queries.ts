@@ -1,3 +1,4 @@
+import * as util from 'util';
 import { MongoQueryInfo } from './graphql-to-mongo';
 import { Db } from 'mongodb';
 import { log } from './log';
@@ -14,12 +15,14 @@ export async function findMultiple(connection: Db, queryInfos: MongoQueryInfo[])
   );
 }
 
+const json = (args: any) => util.inspect(args, { depth: Infinity, breakLength: Infinity, colors: true });
+
 export async function findOne(connection: Db, queryInfo: MongoQueryInfo): Promise<GraphQLExecutionResult> {
   const collection = await connection.collection(queryInfo.collection);
   const collectionName = collection.collectionName;
 
   try {
-    log(`Executing ${collectionName}.findOne(${JSON.stringify(queryInfo.query)}, ${JSON.stringify(queryInfo.fields)})`);
+    log(`Executing ${collectionName}.findOne(${json(queryInfo.query)}, ${json(queryInfo.fields)})`);
     const document = await collection.findOne<object>(queryInfo.query, {
       fields: queryInfo.fields,
     });
@@ -42,7 +45,7 @@ export async function findAll(connection: Db, queryInfo: MongoQueryInfo): Promis
   const collectionName = collection.collectionName;
 
   try {
-    log(`Executing ${collectionName}.find(${JSON.stringify(queryInfo.query)}, ${JSON.stringify(queryInfo.fields)})`);
+    log(`Executing ${collectionName}.find(${json(queryInfo.query)}, ${json(queryInfo.fields)})`);
     const cursor = collection.find<object>(queryInfo.query, queryInfo.fields, queryInfo.skip, queryInfo.limit);
     return {
       collection: collectionName,
