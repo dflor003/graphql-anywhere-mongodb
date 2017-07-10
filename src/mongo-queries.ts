@@ -3,20 +3,48 @@ import { MongoQueryInfo } from './graphql-to-mongo';
 import { Db } from 'mongodb';
 import { log } from './log';
 
+// Helper to print args to mongodb for debug purposes
+const json = (args: any) => util.inspect(args, { depth: Infinity, breakLength: Infinity, colors: true });
+
+/**
+ * The result of executing a GraphQL query against MongoDB.
+ */
 export interface GraphQLExecutionResult {
+  /**
+   * The name of the collection that the query is for.
+   */
   collection: string;
+
+  /**
+   * The results of the query. Will be a single result for findOne and an array for find.
+   */
   results: any[] | any;
+
+  /**
+   * Any error that occurred as part of executing the query.
+   */
   error: Error;
 }
 
+/**
+ * Executes queries against multiple collections and returns all of their results.
+ *
+ * @param connection The mongodb connection.
+ * @param queryInfos An array of {MongoQueryInfo} to execute.
+ * @return {Promise<GraphQLExecutionResult[]>} The results of running all of the queries.
+ */
 export async function findMultiple(connection: Db, queryInfos: MongoQueryInfo[]): Promise<GraphQLExecutionResult[]> {
   return await Promise.all(
     queryInfos.map(query => findAll(connection, query))
   );
 }
 
-const json = (args: any) => util.inspect(args, { depth: Infinity, breakLength: Infinity, colors: true });
-
+/**
+ * Executes a single findOne query for the passed {MongoQueryInfo}.
+ * @param connection The mongodb connection.
+ * @param queryInfo The query {MongoQueryInfo} to execute.
+ * @return {Promise<GraphQLExecutionResult>} The results of running the query.
+ */
 export async function findOne(connection: Db, queryInfo: MongoQueryInfo): Promise<GraphQLExecutionResult> {
   const collection = await connection.collection(queryInfo.collection);
   const collectionName = collection.collectionName;

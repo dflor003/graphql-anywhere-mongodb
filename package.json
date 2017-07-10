@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p .",
-    "test": "mocha",
+    "test": "mocha './test/**/*.spec.ts'",
     "test:watch": "npm run test -- -w"
   },
   "files": [
