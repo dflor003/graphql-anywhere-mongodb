@@ -1,15 +1,18 @@
+import * as chaiAsPromised from 'chai-as-promised';
 import gql from 'graphql-tag';
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import { mongoTestServer } from './util/mongo-test-server';
 import { Collection, Db } from 'mongodb';
 import { MongoGraphQLClient } from '../src';
 import { graphqlClient } from '../src/mongo-grqphql-client-factory';
 
+use(chaiAsPromised);
+
 describe('MongoGraphQLClient', () => {
   const server = mongoTestServer();
   let connection: Db;
   let users: Collection<any>;
-  let collection2: Collection<any>;
+  let cities: Collection<any>;
   let client: MongoGraphQLClient;
 
   before(async () => {
@@ -24,7 +27,7 @@ describe('MongoGraphQLClient', () => {
     connection = await server.getConnection('test-db');
     client = graphqlClient.forConnection(connection);
     users = await connection.collection('users');
-    collection2 = await connection.collection('collection2');
+    cities = await connection.collection('cities');
   });
 
   afterEach(async () => {
@@ -34,7 +37,7 @@ describe('MongoGraphQLClient', () => {
   describe('findOne', () => {
     it('should find a matching document', async () => {
       // Arrange
-      const docs = generateDocs(5);
+      const docs = generateUsers(5);
       await users.insertMany(docs);
 
       const query = gql`
@@ -71,11 +74,29 @@ describe('MongoGraphQLClient', () => {
   });
 
   describe('find', () => {
-    it('should find multiple documents', async () => {
-      // Arrange
-      const docs = generateDocs(6);
+    beforeEach(async() => {
+      const docs = generateUsers(6);
       await users.insertMany(docs);
 
+      const cityDocs = [
+        {
+          _id: 1,
+          name: 'Miami'
+        },
+        {
+          _id: 2,
+          name: 'Ft. Lauderdale'
+        },
+        {
+          _id: 3,
+          name: 'Tampa'
+        },
+      ];
+      await cities.insertMany(cityDocs);
+    });
+
+    it('should find multiple documents', async () => {
+      // Arrange
       const query = gql`
         {
           users {
@@ -110,12 +131,46 @@ describe('MongoGraphQLClient', () => {
       ]);
     });
 
+    it('should find multiple documents across multiple collections', async () => {
+      // Arrange
+      const query = gql`
+        {
+          users {
+            _id
+            name
+          }
+          cities {
+            _id
+            name
+          }
+        }
+      `;
+
+      // Act
+      const results = await client.find(query);
+
+      // Assert
+      expect(results.data.users.length).to.equal(6);
+      expect(results.data.cities.length).to.equal(3);
+      expect(results.data.cities).to.deep.equal([
+        {
+          _id: 1,
+          name: 'Miami'
+        },
+        {
+          _id: 2,
+          name: 'Ft. Lauderdale'
+        },
+        {
+          _id: 3,
+          name: 'Tampa'
+        }
+      ]);
+    });
+
     describe('when using limit', () => {
       it('should limit returned results', async () => {
         // Arrange
-        const docs = generateDocs(10);
-        await users.insertMany(docs);
-
         const query = gql`
           {
             users (limit: 3) {
@@ -146,10 +201,67 @@ describe('MongoGraphQLClient', () => {
         ]);
       });
     });
+
+    describe('when using skip', () => {
+      it('should offset result set', async () => {
+        // Arrange
+        const query = gql`
+          {
+            users (limit: 3, skip: 2) {
+              _id
+              name
+            }
+          }
+        `;
+
+        // Act
+        const results = await client.find(query);
+
+        // Assert
+        expect(results.data.users.length).to.equal(3);
+        expect(results.data.users).to.deep.equal([
+          {
+            _id: 3,
+            name: 'User 3',
+          },
+          {
+            _id: 4,
+            name: 'User 4',
+          },
+          {
+            _id: 5,
+            name: 'User 5',
+          },
+        ]);
+      });
+    });
+
+    describe('when whitelisting collections', () => {
+      beforeEach(async () => {
+        client = graphqlClient.forConnection(connection, {
+          whitelist: ['users']
+        });
+      });
+
+      it('should throw if trying to access non whitelisted collection', async () => {
+        // Arrange
+        const query = gql`
+          {
+            cities {
+              _id
+              name
+            }
+          }
+        `;
+
+        // Act
+        await expect(client.find(query)).to.be.rejectedWith(`Can not query collection 'cities'`);
+      });
+    });
   });
 });
 
-function generateDocs(count: number): any[] {
+function generateUsers(count: number): any[] {
   return Array
     .from(Array(count))
     .map((val, i) => i + 1)
