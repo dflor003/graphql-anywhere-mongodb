@@ -1,5 +1,6 @@
 import { Db } from 'mongodb';
 import { DocumentNode } from 'graphql';
+import { parse } from 'graphql/language/parser';
 import { findMultiple, findOne, GraphQLExecutionResult } from './mongo-queries';
 import { graphqlToMongo } from './graphql-to-mongo';
 import { log } from './log';
@@ -118,9 +119,10 @@ export class MongoGraphQLClient {
    * @param variables Variables to use in the query.
    * @return {Promise<QueryResult>} The result of the queries.
    */
-  async find(query: DocumentNode, variables?: object): Promise<QueryResult> {
+  async find(query: DocumentNode | string, variables?: object): Promise<QueryResult> {
     // Convert graphql to info about how to execute query
-    const queryInfos = graphqlToMongo(query, variables);
+    const document = parseDocument(query);
+    const queryInfos = graphqlToMongo(document, variables);
 
     // Check collections against whitelist
     if (this.whitelist.length) {
@@ -159,9 +161,10 @@ export class MongoGraphQLClient {
    * @param variables Variables to use in the query.
    * @return {Promise<QueryResult>}
    */
-  async findOne(query: DocumentNode, variables?: object): Promise<QueryResult> {
+  async findOne(query: DocumentNode | string, variables?: object): Promise<QueryResult> {
     // Convert graphql to info about how to execute query
-    const queryInfos = graphqlToMongo(query, variables);
+    const document = parseDocument(query);
+    const queryInfos = graphqlToMongo(document, variables);
 
     // Ensure we only have one
     if (!queryInfos || queryInfos.length !== 1) {
@@ -196,4 +199,17 @@ export function defaultErrorFormatter(result: GraphQLExecutionResult, includeSta
       ? (result.error.stack || '').split('\n')
       : undefined
   }
+}
+
+function parseDocument(query: DocumentNode | string): DocumentNode {
+  if (typeof query !== 'string' && !query) {
+    throw new Error('Must pass either document or string');
+  }
+
+  // Parse query to document if passed string
+  if (typeof query === 'string') {
+    return parse(query);
+  }
+
+  return query;
 }

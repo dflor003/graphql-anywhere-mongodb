@@ -32,6 +32,7 @@
   "homepage": "https://github.com/dflor003/graphql-anywhere-mongodb#readme",
   "dependencies": {
     "debug": "^2.6.8",
+    "graphql": "^0.10.3",
     "graphql-anywhere": "^3.1.0",
     "mongodb": "^2.2.x",
     "tslib": "~1.7.x"
@@ -46,7 +47,6 @@
     "@types/node": "^8.0.9",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.1.1",
-    "graphql": "^0.10.3",
     "graphql-tag": "^2.4.2",
     "mocha": "^3.4.2",
     "mongo-in-memory": "^0.0.5",

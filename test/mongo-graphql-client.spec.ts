@@ -35,6 +35,11 @@ describe('MongoGraphQLClient', () => {
   });
 
   describe('findOne', () => {
+    it('should throw an error if null document', async () => {
+      // Act / Assert
+      await expect(client.findOne(null)).to.be.rejectedWith('Must pass either document or string');
+    });
+
     it('should find a matching document', async () => {
       // Arrange
       const docs = generateUsers(5);
@@ -93,6 +98,11 @@ describe('MongoGraphQLClient', () => {
         },
       ];
       await cities.insertMany(cityDocs);
+    });
+
+    it('should throw an error if null document', async () => {
+      // Act / Assert
+      await expect(client.find(null)).to.be.rejectedWith('Must pass either document or string');
     });
 
     it('should find multiple documents', async () => {
