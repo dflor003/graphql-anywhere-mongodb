@@ -16,6 +16,10 @@ Or using yarn:
 yarn add graphql-tag graphql-anywhere-mongodb
 ```
 
+## Example App
+
+Wanna take this for a spin? See the [graphql-anywhere-mongodb-example](https://github.com/dflor003/graphql-anywhere-mongodb-example) repo for instructions on how to plug this in with [graphql-anywhere-mongodb-express](https://github.com/dflor003/graphql-anywhere-mongodb-express) to be able to make queries into MongoDB using GraphiQL.
+
 ## Usage
 
 Use one of the factory functions to create a query executor and then call `find` or `findOne` with a GraphQL query that contains one or more queries around your mongo collections:
@@ -57,6 +61,86 @@ async function doStuff() {
     date: new Date('2017-01-17T05:00:00.000Z')
   };
   const results = await mongo.find(query, variables);
+}
+```
+
+## Examples
+
+### Querying one or more collections
+
+Top level objects correspond to collections. You can query one or more collections in a single graphql query. For example, assuming we have a collection `users` and `places`, we can make the following query:
+
+```graphql
+# Return firstName and lastName from users
+# AND also return name from place
+{
+  users {
+    firstName
+    lastName
+  }
+  places {
+    name
+  }
+}
+```
+
+### Projection
+
+Every field name listed will be included in the final projection that you get from MongoDB. This works on nested objects AND arrays. The MongoDB `_id` field is always returned.
+
+```graphql
+{
+  users {
+    firstName
+    lastName
+    address {
+      line1
+      line2
+      city
+      state
+      zip
+    }
+    favoritePlaces {
+      name
+      gps {
+        lat
+        lng
+      }
+    }
+  }
+}
+```
+
+### Limit/Skip
+
+You can add a top-level argument for `limit` and/or `skip` to pass those arguments along to the final mongodb query.
+
+```graphql
+{
+  users (limit: 10, skip 0) {
+    firstName
+    lastName
+  }
+}
+```
+
+### Filters
+
+Use standard MongoDB filters like `$eq`, `$ne`, `$gt`, `$gte`, etc. without the `$` prefix as part of your GraphQL query to add filters to your query. See the [MongoDB Docs](https://docs.mongodb.com/manual/reference/operator/query/) for the full list of valid filters.
+
+**Note:** Array filters like `$elemMatch` are not currently supported.
+
+```graphql
+{
+  users (limit: 10, skip: 0) {
+    firstName
+    lastName
+    age (gte: 21)
+    address {
+      city (eq: "Miami")
+      state (eq: "Florida")
+    }
+  }
 }
 ```
 
