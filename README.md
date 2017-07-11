@@ -4,8 +4,6 @@
 
 A library based off [graphql-anywhere](https://github.com/apollographql/graphql-anywhere) that lets you use schemaless GraphQL queries to query documents across one or more MongoDB collections. Use it together with [graphql-tag](https://github.com/apollographql/graphql-tag).
 
-**NOTE:** Not published yet as this is a work in progress.
-
 Install using npm:
 
 ```sh
