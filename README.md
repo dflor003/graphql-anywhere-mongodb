@@ -72,7 +72,7 @@ Top level objects correspond to collections. You can query one or more collectio
 
 ```graphql
 # Return firstName and lastName from users
-# AND also return name from place
+# AND also return name from places
 {
   users {
     firstName
@@ -150,5 +150,8 @@ Use standard MongoDB filters like `$eq`, `$ne`, `$gt`, `$gte`, etc. without the 
 - [X] Support collection-level things like `limit` and `skip`.
 - [ ] Support other collection-level things like sorting.
 - [ ] Support more complex data types
-- [ ] Support projection/filtering of arrays inside documents.
-- [ ] GraphiQL-like example to test this against arbitrary MongoDB instances.
+- [X] Support projection of arrays inside documents.
+- [ ] Support filtering of arrays inside documents.
+- [X] GraphiQL-like example to test this against arbitrary MongoDB instances.
+- [ ] Support mutating documents
+- [ ] Support inserting documents
