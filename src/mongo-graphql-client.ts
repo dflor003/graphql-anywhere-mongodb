@@ -41,6 +41,12 @@ export interface GraphQLMongoClientOptions {
    * Defaults to 100 if not passed.
    */
   defaultLimit?: number;
+
+  /**
+   * The maximum limit accepted for a graphql request. If a limit is encountered above this
+   * an error will be thrown. Defaults to 10000.
+   */
+  maxLimit?: number;
 }
 
 /**
@@ -103,6 +109,7 @@ export class MongoGraphQLClient {
   private readonly includeStack: boolean;
   private readonly errorFormatter: ErrorFormatter;
   private readonly defaultLimit: number;
+  private readonly maxLimit: number;
 
   /**
    * Create a new {MongoGraphQLClient}.
@@ -123,13 +130,29 @@ export class MongoGraphQLClient {
     this.defaultLimit = typeof options.defaultLimit === 'number'
       ? options.defaultLimit
       : 100;
+    this.maxLimit = typeof options.maxLimit === 'number'
+      ? options.maxLimit
+      : 10000;
 
-    log('Mongo GraphQL client initialized with options', {
+    if (this.defaultLimit > this.maxLimit) {
+      throw new Error('Default limit must be less than or equal to max limit');
+    }
+
+    log('Mongo GraphQL client initialized with options', this.getOptions());
+  }
+
+  /**
+   * Gets the options that this client was configured with.
+   */
+  getOptions() {
+    return {
       database: this.connection.databaseName,
       whitelist: this.whitelist,
       includeStack: this.includeStack,
       errorFormatter: this.errorFormatter,
-    });
+      defaultLimit: this.defaultLimit,
+      maxLimit: this.maxLimit
+    };
   }
 
   /**
@@ -159,6 +182,13 @@ export class MongoGraphQLClient {
         });
     }
 
+    // Enforce max limit
+    queryInfos
+      .filter(info => info.limit > this.maxLimit)
+      .forEach(info => {
+        throw new Error(`Limit of ${info.limit} on collection '${info.collection}' exceeds the maximum of ${this.maxLimit}`);
+      });
+
     // Execute the query and get back the results
     const results = await findMultiple(this.connection, queryInfos);
 
@@ -178,7 +208,7 @@ export class MongoGraphQLClient {
         ...obj,
         [info.collection]: {
           limit: info.limit,
-          skip: info.skip
+          skip: info.skip || 0
         }
       }), {})
     }
