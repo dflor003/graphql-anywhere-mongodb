@@ -34,6 +34,19 @@ export interface GraphQLMongoClientOptions {
    * }
    */
   formatError?: ErrorFormatter;
+
+  /**
+   * If no limit clause is passed, this default limit will be used. This is to prevent
+   * someone accidentally pulling in thousands or millions of mongo documents by mistake.
+   * Defaults to 100 if not passed.
+   */
+  defaultLimit?: number;
+
+  /**
+   * The maximum limit accepted for a graphql request. If a limit is encountered above this
+   * an error will be thrown. Defaults to 10000.
+   */
+  maxLimit?: number;
 }
 
 /**
@@ -74,6 +87,16 @@ export interface QueryResult {
    * Errors that occurred during the process (if any).
    */
   errors?: any[];
+
+  /**
+   * Metadata about each collection query such as the limit applied and offset.
+   */
+  _meta?: {
+    [collection: string]: {
+      limit?: number;
+      offset?: number;
+    }
+  }
 }
 
 /**
@@ -85,6 +108,8 @@ export class MongoGraphQLClient {
   private readonly whitelist: string[];
   private readonly includeStack: boolean;
   private readonly errorFormatter: ErrorFormatter;
+  private readonly defaultLimit: number;
+  private readonly maxLimit: number;
 
   /**
    * Create a new {MongoGraphQLClient}.
@@ -102,13 +127,32 @@ export class MongoGraphQLClient {
       .map(collection => collection.toLowerCase());
     this.includeStack = options.includeStack === true;
     this.errorFormatter = options.formatError || defaultErrorFormatter;
+    this.defaultLimit = typeof options.defaultLimit === 'number'
+      ? options.defaultLimit
+      : 100;
+    this.maxLimit = typeof options.maxLimit === 'number'
+      ? options.maxLimit
+      : 10000;
 
-    log('Mongo GraphQL client initialized with options', {
+    if (this.defaultLimit > this.maxLimit) {
+      throw new Error('Default limit must be less than or equal to max limit');
+    }
+
+    log('Mongo GraphQL client initialized with options', this.getOptions());
+  }
+
+  /**
+   * Gets the options that this client was configured with.
+   */
+  getOptions() {
+    return {
       database: this.connection.databaseName,
       whitelist: this.whitelist,
       includeStack: this.includeStack,
       errorFormatter: this.errorFormatter,
-    });
+      defaultLimit: this.defaultLimit,
+      maxLimit: this.maxLimit
+    };
   }
 
   /**
@@ -122,7 +166,11 @@ export class MongoGraphQLClient {
   async find(query: DocumentNode | string, variables?: object): Promise<QueryResult> {
     // Convert graphql to info about how to execute query
     const document = parseDocument(query);
-    const queryInfos = graphqlToMongo(document, variables);
+    const queryInfos = graphqlToMongo(document, variables)
+
+    // Default limit on query infos if not passed
+    queryInfos
+      .forEach(info => info.limit = typeof info.limit === 'number' ? info.limit : this.defaultLimit);
 
     // Check collections against whitelist
     if (this.whitelist.length) {
@@ -133,6 +181,13 @@ export class MongoGraphQLClient {
           throw new Error(`Can not query collection '${collection}'`);
         });
     }
+
+    // Enforce max limit
+    queryInfos
+      .filter(info => info.limit > this.maxLimit)
+      .forEach(info => {
+        throw new Error(`Limit of ${info.limit} on collection '${info.collection}' exceeds the maximum of ${this.maxLimit}`);
+      });
 
     // Execute the query and get back the results
     const results = await findMultiple(this.connection, queryInfos);
@@ -148,7 +203,14 @@ export class MongoGraphQLClient {
         ...obj,
         [result.collection]: result.results
       }), {}),
-      errors: !errors.length ? undefined : errors
+      errors: !errors.length ? undefined : errors,
+      _meta: queryInfos.reduce((obj, info) => ({
+        ...obj,
+        [info.collection]: {
+          limit: info.limit,
+          skip: info.skip || 0
+        }
+      }), {})
     }
   }
 

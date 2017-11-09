@@ -34,6 +34,26 @@ describe('MongoGraphQLClient', () => {
     await connection.dropDatabase();
   });
 
+  describe('when created', () => {
+    it('should default to defaultLimit of 100', () => {
+      // Assert
+      expect(client.getOptions().defaultLimit).to.equal(100);
+    });
+
+    it('should default to maxLimit of 10000', () => {
+      // Assert
+      expect(client.getOptions().maxLimit).to.equal(10000);
+    });
+
+    it('should throw if defaultLimit greater than maxLimit', () => {
+      // Act/Assert
+      expect(() => new MongoGraphQLClient(connection, {
+        defaultLimit: 20000,
+        maxLimit: 19999
+      })).to.throw('Default limit must be less than or equal to max limit');
+    });
+  });
+
   describe('findOne', () => {
     it('should throw an error if null document', async () => {
       // Act / Assert
@@ -122,6 +142,10 @@ describe('MongoGraphQLClient', () => {
 
       // Assert
       expect(results.data.users.length).to.equal(3);
+      expect(results._meta.users).to.deep.equal({
+        limit: 100,
+        skip: 0
+      });
       expect(results.data.users).to.deep.equal([
         {
           _id: 4,
@@ -209,6 +233,22 @@ describe('MongoGraphQLClient', () => {
             name: 'User 3',
           },
         ]);
+      });
+
+      it('should fail if requesting more than maxLimit', () => {
+        // Arrange
+        const query = gql`
+          {
+            users (limit: 30000) {
+              _id
+            }
+          }
+        `;
+
+        // Act / Assert
+        expect(client.find(query)).to.be.rejectedWith(
+          `Limit of 30000 on collection 'users' exceeds the maximum of 10000`
+        );
       });
     });
 
