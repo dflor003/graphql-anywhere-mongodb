@@ -113,7 +113,7 @@ describe('GraphQL to Mongo', () => {
     `;
 
     // Act / Assert
-    expect(() => graphqlToMongo(query)).to.throw(`Arguments are not supported at sub-document level`);
+    expect(() => graphqlToMongo(query)).to.throw(`Argument 'limit' is not a valid non-leaf-level argument`);
   });
 
   it(`should not support collection level arguments that don't make sense`, () => {
@@ -144,5 +144,40 @@ describe('GraphQL to Mongo', () => {
 
     // Act / Assert
     expect(() => graphqlToMongo(query)).to.throw(`Argument 'derp' is not a valid field-level argument.`);
+  });
+
+  it('should allow you to include an outer portion of the document while filtering inside it', () => {
+    // Arrange
+    const query = gql`
+      {
+        events {
+          type
+          outer {
+            body(include: true) {
+              inner {
+                businessId(eq: "Foo")
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    // Act
+    const result = graphqlToMongo(query, { limit: 100, offset: 10 });
+
+    // Assert
+    expect(result).to.deep.equal([
+      {
+        collection: 'events',
+        query: {
+          'outer.body.inner.businessId': { $eq: 'Foo' }
+        },
+        fields: {
+          'type': 1,
+          'outer.body': 1,
+        }
+      }
+    ]);
   });
 });
