@@ -111,6 +111,20 @@ Every field name listed will be included in the final projection that you get fr
 }
 ```
 
+In cases where you need to filter on a nested object but project the entire outer document you may add `include: true` to the parent document to include it in its entirety. For example, given the same schema as the above query, this would return the entire `address` sub-document, even though we only explicitly call out `zip`:
+
+```graphql
+{
+  users {
+    firstName
+    lastName
+    address (include: true) {
+      zip (eq: "33326")
+    }
+  }
+}
+```
+
 ### Limit/Skip
 
 You can add a top-level argument for `limit` and/or `skip` to pass those arguments along to the final mongodb query.
@@ -149,6 +163,7 @@ Use standard MongoDB filters like `$eq`, `$ne`, `$gt`, `$gte`, etc. without the 
 - [X] Support basic querying capabilities against MongoDB Collections.
 - [X] Support collection-level things like `limit` and `skip`.
 - [ ] Support other collection-level things like sorting.
+- [X] Support querying on an inner nexted document while projecting the entire document.
 - [ ] Support more complex data types
 - [X] Support projection of arrays inside documents.
 - [ ] Support filtering of arrays inside documents.
