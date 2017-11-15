@@ -74,7 +74,10 @@ export async function findAll(connection: Db, queryInfo: MongoQueryInfo): Promis
   const hasSort = Object.keys(queryInfo.sort).length > 0;
 
   try {
-    log(`Executing ${collectionName}.find(${json(queryInfo.query)}, ${json(queryInfo.fields)})`);
+    log(
+      `Executing ${collectionName}.find(${json(queryInfo.query)}, ${json(queryInfo.fields)})` +
+      (!hasSort ? '' : `.sort(${json(queryInfo.sort)})`)
+    );
     const cursor = collection.find<object>(
       queryInfo.query,
       queryInfo.fields,

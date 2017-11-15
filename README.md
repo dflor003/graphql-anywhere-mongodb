@@ -138,6 +138,20 @@ You can add a top-level argument for `limit` and/or `skip` to pass those argumen
 }
 ```
 
+### Sorting
+
+In order to sort by one or more field, annotate the given field with the `@sort` directive for sorting in ascending order or the `@sortDesc` directive for sorting in descending order on that field.
+
+```graphql
+{
+  users (limit: 10, skip 0) {
+    firstName
+    lastName
+    age (gte: 21) @sortDesc
+  }
+}
+```
+
 ### Filters
 
 Use standard MongoDB filters like `$eq`, `$ne`, `$gt`, `$gte`, etc. without the `$` prefix as part of your GraphQL query to add filters to your query. See the [MongoDB Docs](https://docs.mongodb.com/manual/reference/operator/query/) for the full list of valid filters.
@@ -162,7 +176,7 @@ Use standard MongoDB filters like `$eq`, `$ne`, `$gt`, `$gte`, etc. without the 
 
 - [X] Support basic querying capabilities against MongoDB Collections.
 - [X] Support collection-level things like `limit` and `skip`.
-- [ ] Support other collection-level things like sorting.
+- [X] Support sorting.
 - [X] Support querying on an inner nexted document while projecting the entire document.
 - [ ] Support more complex data types
 - [X] Support projection of arrays inside documents.
