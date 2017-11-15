@@ -15,6 +15,9 @@ export interface MongoQueryInfo {
   fields: {
     [field: string]: number;
   };
+  sort: {
+    [field: string]: number;
+  };
 }
 
 interface FieldMetaData {
@@ -69,7 +72,8 @@ export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQu
       const baseQuery: any = {
         collection,
         query: {},
-        fields: {}
+        fields: {},
+        sort: {}
       };
 
       // Add on any extra parameters like limit, skip, sort, etc.
@@ -146,6 +150,14 @@ function buildQuery(node: QueryInfo, parents: string[], queryInfo: MongoQueryInf
     if (!ancestorProjected && args.include === true) {
       queryInfo.fields[fieldPath] = 1;
       ancestorProjected = true;
+    }
+
+    // Apply sorting
+    if ('sort' in metaData.directives) {
+      queryInfo.sort[fieldPath] = 1;
+    }
+    if ('sortDesc' in metaData.directives) {
+      queryInfo.sort[fieldPath] = -1;
     }
 
     // Process leaf queries

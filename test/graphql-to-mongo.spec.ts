@@ -34,7 +34,8 @@ describe('GraphQL to Mongo', () => {
           'body.id': 1,
           'body.tenantId': 1,
           'body.name': 1,
-        }
+        },
+        sort: {},
       }
     ]);
   });
@@ -75,7 +76,8 @@ describe('GraphQL to Mongo', () => {
           body: 1
         },
         limit: 20,
-        skip: 10
+        skip: 10,
+        sort: {},
       }
     ])
   });
@@ -117,7 +119,8 @@ describe('GraphQL to Mongo', () => {
           'tenantId': 1,
           'timestamp': 1,
           'body': 1,
-        }
+        },
+        sort: {},
       }
     ]);
   });
@@ -146,7 +149,8 @@ describe('GraphQL to Mongo', () => {
         fields: {
           'firstName': 1,
           'lastName': 1,
-        }
+        },
+        sort: {},
       }
     ]);
   });
@@ -224,12 +228,50 @@ describe('GraphQL to Mongo', () => {
     expect(result).to.deep.equal([
       {
         collection: 'events',
+        sort: {},
         query: {
           'outer.body.inner.businessId': { $eq: 'Foo' }
         },
         fields: {
           'type': 1,
           'outer.body': 1,
+        }
+      }
+    ]);
+  });
+
+  it('should support sorting by multiple fields', () => {
+    // Arrange
+    const query = gql`
+      {
+        events(limit: 10)  {
+          timestamp @sort
+          body(include: true) {
+            otherField @sortDesc
+            businessId(eq: "Bar")
+          }
+        }
+      }
+    `;
+
+    // Act
+    const result = graphqlToMongo(query);
+
+    // Assert
+    expect(result).to.deep.equal([
+      {
+        collection: 'events',
+        limit: 10,
+        query: {
+          'body.businessId': { $eq: 'Bar' }
+        },
+        fields: {
+          'timestamp': 1,
+          'body': 1,
+        },
+        sort: {
+          'timestamp': 1,
+          'body.otherField': -1
         }
       }
     ]);

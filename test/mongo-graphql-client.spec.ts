@@ -286,6 +286,80 @@ describe('MongoGraphQLClient', () => {
       });
     });
 
+    describe('when sorting', () => {
+      it('should be able to sort ascending', async () => {
+        // Arrange
+        const query = gql`
+          {
+            users (limit: 3) {
+              _id
+              name
+              timeSinceLastLogin @sort
+            }
+          }
+        `;
+
+        // Act
+        const results = await client.find(query);
+
+        // Assert
+        expect(results.data.users.length).to.equal(3);
+        expect(results.data.users).to.deep.equal([
+          {
+            _id: 6,
+            name: 'User 6',
+            timeSinceLastLogin: 40,
+          },
+          {
+            _id: 5,
+            name: 'User 5',
+            timeSinceLastLogin: 50,
+          },
+          {
+            _id: 4,
+            name: 'User 4',
+            timeSinceLastLogin: 60,
+          },
+        ]);
+      });
+
+      it('should be able to sort descending', async () => {
+        // Arrange
+        const query = gql`
+          {
+            users (limit: 3) {
+              _id
+              name
+              age @sortDesc
+            }
+          }
+        `;
+
+        // Act
+        const results = await client.find(query);
+
+        // Assert
+        expect(results.data.users.length).to.equal(3);
+        expect(results.data.users).to.deep.equal([
+          {
+            _id: 6,
+            name: 'User 6',
+            age: 23,
+          },
+          {
+            _id: 5,
+            name: 'User 5',
+            age: 22,
+          },
+          {
+            _id: 4,
+            name: 'User 4',
+            age: 21,
+          },
+        ]);
+      });
+    });
+
     describe('when whitelisting collections', () => {
       beforeEach(async () => {
         client = graphqlClient.forConnection(connection, {
@@ -319,6 +393,7 @@ function generateUsers(count: number): any[] {
       _id: index,
       name: `User ${index}`,
       age: 17 + index,
+      timeSinceLastLogin: 100 - (index * 10),
       address: {
         line1: `Something ${index}`,
         line2: `Other thing ${index}`,

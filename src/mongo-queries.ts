@@ -71,13 +71,24 @@ export async function findOne(connection: Db, queryInfo: MongoQueryInfo): Promis
 export async function findAll(connection: Db, queryInfo: MongoQueryInfo): Promise<GraphQLExecutionResult> {
   const collection = await connection.collection(queryInfo.collection);
   const collectionName = collection.collectionName;
+  const hasSort = Object.keys(queryInfo.sort).length > 0;
 
   try {
     log(`Executing ${collectionName}.find(${json(queryInfo.query)}, ${json(queryInfo.fields)})`);
-    const cursor = collection.find<object>(queryInfo.query, queryInfo.fields, queryInfo.skip, queryInfo.limit);
+    const cursor = collection.find<object>(
+      queryInfo.query,
+      queryInfo.fields,
+      queryInfo.skip,
+      queryInfo.limit
+    );
+
+    const results = hasSort
+      ? await cursor.sort(queryInfo.sort).toArray()
+      : await cursor.toArray();
+
     return {
       collection: collectionName,
-      results: await cursor.toArray(),
+      results: results,
       error: null,
     };
   } catch (err) {
