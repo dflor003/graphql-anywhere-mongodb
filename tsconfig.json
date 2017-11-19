@@ -15,7 +15,8 @@
     "noImplicitAny": true,
     "lib": [
       "dom",
-      "es2017"
+      "es2017",
+      "esnext"
     ]
   },
   "exclude": [
