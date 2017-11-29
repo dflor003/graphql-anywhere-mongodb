@@ -40,6 +40,34 @@ describe('GraphQL to Mongo', () => {
     ]);
   });
 
+  it('should support case-insensitive regex queries', () => {
+    // Arrange
+    const query = gql`
+      {
+        myCollection {
+          type (regex: "someTHING", options: "i")
+        }
+      }
+    `;
+
+    // Act
+    const result = graphqlToMongo(query);
+
+    // Assert
+    expect(result).to.deep.equal([
+      {
+        collection: 'myCollection',
+        query: {
+          'type': { $regex: 'someTHING', $options: 'i' },
+        },
+        fields: {
+          'type': 1,
+        },
+        sort: {},
+      }
+    ]);
+  });
+
   it('should support variables', () => {
     // Arrange
     const query = gql`
