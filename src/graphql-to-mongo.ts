@@ -1,7 +1,7 @@
 import graphql from 'graphql-anywhere';
 import { ExecInfo } from 'graphql-anywhere';
 import { DocumentNode } from 'graphql';
-import { DirectiveInfo, shouldInclude } from 'graphql-anywhere/lib/src/directives';
+import { DirectiveInfo } from 'graphql-anywhere/lib/src/directives';
 
 const { keys } = Object;
 
