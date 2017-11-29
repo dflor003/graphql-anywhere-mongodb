@@ -1,7 +1,7 @@
 import graphql from 'graphql-anywhere';
 import { ExecInfo } from 'graphql-anywhere';
 import { DocumentNode } from 'graphql';
-import { DirectiveInfo } from 'graphql-anywhere/lib/src/directives';
+import { DirectiveInfo, shouldInclude } from 'graphql-anywhere/lib/src/directives';
 
 const { keys } = Object;
 
@@ -60,6 +60,9 @@ const validateLeafArguments = (args: any) => keys(args)
     throw new Error(`Argument '${arg}' is not a valid field-level argument.`);
   });
 
+// Special arguments that should be handled after other operations
+const SpecialOperations = ['options'];
+const precedenceSort = (a: string) => SpecialOperations.includes(a) ? 1 : -1;
 
 export function graphqlToMongo(query: DocumentNode, variables?: object): MongoQueryInfo[] {
   // Use resolver to build an intermediate model of how the mongo query will look
@@ -162,12 +165,17 @@ function buildQuery(node: QueryInfo, parents: string[], queryInfo: MongoQueryInf
 
     // Process leaf queries
     if (childNode.isQuery) {
-      for (const operation of keys(args)) {
+      const operations = queryInfo.query[fieldPath] = queryInfo.query[fieldPath] || {};
+      for (const operation of keys(args).sort(precedenceSort)) {
         const value = args[operation];
         if (typeof value !== 'undefined') {
-          const fieldQuery = queryInfo.query[fieldPath] = queryInfo.query[fieldPath] || {};
-          applyOperation(fieldQuery, operation, value);
+          applyOperation(operations, operation, value);
         }
+      }
+
+      // If results in empty object, blank it out
+      if (operations && keys(operations).length === 0) {
+        delete queryInfo.query[fieldPath];
       }
 
       // Add leaf fields to projection
@@ -182,5 +190,13 @@ function buildQuery(node: QueryInfo, parents: string[], queryInfo: MongoQueryInf
 }
 
 function applyOperation(obj: any, operation: string, value: any) {
-  obj[`$${operation}`] = value;
+  switch(operation) {
+    case 'options':
+      if (typeof obj['$regex'] !== 'undefined') {
+        obj[`$options`] = value;
+      }
+      break;
+    default:
+      obj[`$${operation}`] = value;
+  }
 }
