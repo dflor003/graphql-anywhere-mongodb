@@ -99,22 +99,25 @@ describe('MongoGraphQLClient', () => {
   });
 
   describe('find', () => {
-    beforeEach(async() => {
+    beforeEach(async () => {
       const docs = generateUsers(6);
       await users.insertMany(docs);
 
       const cityDocs = [
         {
           _id: 1,
-          name: 'Miami'
+          name: 'Miami',
+          location: 'Florida',
         },
         {
           _id: 2,
-          name: 'Ft. Lauderdale'
+          name: 'Ft. Lauderdale',
+          location: 'Florida',
         },
         {
           _id: 3,
-          name: 'Tampa'
+          name: 'Tampa',
+          location: 'Florida',
         },
       ];
       await cities.insertMany(cityDocs);
@@ -249,6 +252,86 @@ describe('MongoGraphQLClient', () => {
         expect(client.find(query)).to.be.rejectedWith(
           `Limit of 30000 on collection 'users' exceeds the maximum of 10000`
         );
+      });
+    });
+
+    describe('when using regex', () => {
+      it('should allow you to make regex queries', async () => {
+        // Arrange
+        const query = gql`
+          {
+            cities {
+              _id
+              name(regex: "am")
+            }
+          }
+        `;
+
+        // Act
+        const results = await client.find(query);
+
+        // Assert
+        expect(results.data.cities.length).to.equal(2);
+        expect(results.data.cities).to.deep.equal([
+          {
+            _id: 1,
+            name: 'Miami',
+          },
+          {
+            _id: 3,
+            name: 'Tampa',
+          },
+        ]);
+      });
+
+      it('should allow you to make case-insensitive regex queries', async () => {
+        // Arrange
+        const query = gql`
+          {
+            cities {
+              _id
+              name(regex: "MIA", options: "i")
+            }
+          }
+        `;
+
+        // Act
+        const results = await client.find(query);
+
+        // Assert
+        expect(results.data.cities.length).to.equal(1);
+        expect(results.data.cities).to.deep.equal([
+          {
+            _id: 1,
+            name: 'Miami',
+          }
+        ]);
+      });
+
+      it('should only pass options if regex has a value', async () => {
+        // Arrange
+        const query = gql`
+          {
+            cities {
+              _id
+              name(regex: $name, options: "gi")
+              location(regex: $loc, options: "gi")
+            }
+          }
+        `;
+
+        // Act
+        const results = await client.find(query, { name: 'MIA' });
+
+        // Assert
+        expect(results.data.cities.length).to.equal(1);
+        expect(results.data.cities).to.deep.equal([
+          {
+            _id: 1,
+            name: 'Miami',
+            location: 'Florida'
+          }
+        ]);
       });
     });
 
