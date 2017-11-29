@@ -53,7 +53,7 @@ const validateNonLeafArgs = (args: any) => keys(args)
   });
 
 // Arguments that are valid for any leaf
-export const ValidLeafArguments = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'exists', 'regex'];
+export const ValidLeafArguments = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'exists', 'regex', 'options'];
 const validateLeafArguments = (args: any) => keys(args)
   .filter(arg => !ValidLeafArguments.includes(arg))
   .forEach(arg => {
@@ -162,10 +162,11 @@ function buildQuery(node: QueryInfo, parents: string[], queryInfo: MongoQueryInf
 
     // Process leaf queries
     if (childNode.isQuery) {
-      for (const queryKey of keys(args)) {
-        if (typeof args[queryKey] !== 'undefined') {
+      for (const operation of keys(args)) {
+        const value = args[operation];
+        if (typeof value !== 'undefined') {
           const fieldQuery = queryInfo.query[fieldPath] = queryInfo.query[fieldPath] || {};
-          fieldQuery[`$${queryKey}`] = args[queryKey];
+          applyOperation(fieldQuery, operation, value);
         }
       }
 
@@ -178,4 +179,8 @@ function buildQuery(node: QueryInfo, parents: string[], queryInfo: MongoQueryInf
       buildQuery(childNode, path, queryInfo, context, ancestorProjected);
     }
   }
+}
+
+function applyOperation(obj: any, operation: string, value: any) {
+  obj[`$${operation}`] = value;
 }
